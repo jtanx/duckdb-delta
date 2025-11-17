@@ -399,7 +399,12 @@ static unordered_map<idx_t, Value> FindPartitionValues(ParsedExpression &transfo
         idx_t index_to_insert = 0;
         if (!field_name.empty()) {
             for (idx_t i = 0; i < cols.size(); ++i) {
-                if (field_name == cols[i].name) {
+                bool matches = (field_name == cols[i].name);
+                // Also check physical name if column mapping is enabled
+                if (!matches && !cols[i].identifier.IsNull() && cols[i].identifier.type() == LogicalType::VARCHAR) {
+                    matches = (field_name == StringValue::Get(cols[i].identifier));
+                }
+                if (matches) {
                     index_to_insert = is_replace ? i : i+1;
                     break;
                 }
