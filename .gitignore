@@ -13,4 +13,4 @@ data/unpacked_golden_tables
 __azurite*__.json
 __blobstorage__
 venv
-.vscode
+.vscode_codeql_detected_source_root

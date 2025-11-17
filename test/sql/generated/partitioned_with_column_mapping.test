@@ -1,0 +1,98 @@
+# name: test/sql/generated/partitioned_with_column_mapping.test
+# description: test partitioned table with column mapping enabled
+# group: [generated]
+
+require parquet
+
+require delta
+
+require-env GENERATED_DATA_AVAILABLE
+
+# Test that partition columns are correctly read when column mapping is enabled
+# This tests the fix for the regression where partition values were misread/null
+# when column mapping mode is 'name' (physical vs logical column names)
+
+query II
+FROM delta_scan('./data/generated/simple_partitioned_with_column_mapping/delta_lake/')
+ORDER BY i
+----
+0	0
+1	1
+2	0
+3	1
+4	0
+5	1
+6	0
+7	1
+8	0
+9	1
+
+# Test with projection to ensure partition column values are correct
+query II
+SELECT part, i
+FROM delta_scan('./data/generated/simple_partitioned_with_column_mapping/delta_lake/')
+ORDER BY i
+----
+0	0
+1	1
+0	2
+1	3
+0	4
+1	5
+0	6
+1	7
+0	8
+1	9
+
+# Test different column order in projection
+query II
+SELECT i, part
+FROM delta_scan('./data/generated/simple_partitioned_with_column_mapping/delta_lake/')
+ORDER BY i
+----
+0	0
+1	1
+2	0
+3	1
+4	0
+5	1
+6	0
+7	1
+8	0
+9	1
+
+# Test filtering on partition column
+query II
+SELECT i, part
+FROM delta_scan('./data/generated/simple_partitioned_with_column_mapping/delta_lake/')
+WHERE part = 0
+ORDER BY i
+----
+0	0
+2	0
+4	0
+6	0
+8	0
+
+# Test filtering on partition column = 1
+query II
+SELECT i, part
+FROM delta_scan('./data/generated/simple_partitioned_with_column_mapping/delta_lake/')
+WHERE part = 1
+ORDER BY i
+----
+1	1
+3	1
+5	1
+7	1
+9	1
+
+# Test aggregation with partition column
+query III
+SELECT part, COUNT(*), SUM(i)
+FROM delta_scan('./data/generated/simple_partitioned_with_column_mapping/delta_lake/')
+GROUP BY part
+ORDER BY part
+----
+0	5	20
+1	5	25
