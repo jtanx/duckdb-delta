@@ -47,6 +47,12 @@ queries = [
 ]
 generate_test_data_pyspark_by_queries(BASE_PATH,'simple_table_column_mapped_by_id', 'simple_table_column_mapped_by_id', base_query, queries, 'name')
 
+## partitioned table with column mapping
+## This tests the fix for partition columns being misread when column mapping is enabled
+con = duckdb.connect()
+con.query(f"COPY (SELECT i, i%2 as part FROM range(0,10) tbl(i)) TO '{TMP_PATH}/simple_partitioned_with_column_mapping.parquet'")
+generate_test_data_pyspark(BASE_PATH,'simple_partitioned_with_column_mapping', 'simple_partitioned_with_column_mapping', f'{TMP_PATH}/simple_partitioned_with_column_mapping.parquet', partition_column='part', mapping_mode='name')
+
 ################################################
 ### TPC-H
 ################################################
